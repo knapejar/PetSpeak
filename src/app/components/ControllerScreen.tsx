@@ -62,6 +62,14 @@ export function ControllerScreen() {
           <p className="text-xs text-slate-500 mt-1">
             Kliknutí okamžitě pošle text všem klientům.
           </p>
+          <motion.button
+            whileTap={{ scale: 0.98 }}
+            whileHover={{ scale: 1.01 }}
+            onClick={() => void pushUpdate({ subtitle: "" })}
+            className="mt-3 w-full text-left rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm text-slate-700"
+          >
+            Hide current subtitle bubble
+          </motion.button>
           <div className="mt-3 grid grid-cols-1 gap-2">
             {PRESET_SUBTITLES.map((subtitle) => (
               <motion.button

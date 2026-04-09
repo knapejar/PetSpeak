@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Share2, Volume2, Circle, Save } from "lucide-react";
 import { ShareModal } from "./ShareModal";
 import { useRealtimeState } from "../realtime";
+import { saveRecordingToGallery } from "../recordings";
 
 export function CameraScreen() {
   const { state: liveState } = useRealtimeState();
@@ -47,36 +48,12 @@ export function CameraScreen() {
   }, [liveState.updatedAt, liveState.subtitle]);
 
   const persistRecording = async (recordingBlob: Blob) => {
-    const fileName = `petspeak-${new Date().toISOString().replace(/[:.]/g, "-")}.webm`;
-    const file = new File([recordingBlob], fileName, { type: recordingBlob.type });
-
-    if (
-      navigator.share &&
-      navigator.canShare &&
-      navigator.canShare({ files: [file] })
-    ) {
-      try {
-        await navigator.share({
-          files: [file],
-          title: "PetSpeak recording",
-          text: "PetSpeak video recording",
-        });
-        setRecordingStatusMessage("Recording saved via share sheet 🎉");
-        return;
-      } catch {
-        // fallback to download below
-      }
+    try {
+      await saveRecordingToGallery(recordingBlob);
+      setRecordingStatusMessage("Recording saved to gallery 🎉");
+    } catch {
+      setRecordingStatusMessage("Could not save recording to gallery.");
     }
-
-    const downloadUrl = URL.createObjectURL(recordingBlob);
-    const link = document.createElement("a");
-    link.href = downloadUrl;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(downloadUrl);
-    setRecordingStatusMessage("Recording saved to Downloads 🎉");
   };
 
   const startRecording = () => {
@@ -133,7 +110,6 @@ export function CameraScreen() {
     recorder.start(250);
     setIsRecording(true);
     setIsListening(true);
-    setRecordingStatusMessage("Recording started. Tap Save when done 🎬");
   };
 
   const handleRecordSave = () => {

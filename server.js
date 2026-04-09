@@ -51,7 +51,7 @@ wss.on("connection", (socket) => {
         state.videoSrc = nextVideoSrc.trim();
       }
 
-      if (typeof nextSubtitle === "string" && nextSubtitle.trim().length > 0) {
+      if (typeof nextSubtitle === "string") {
         state.subtitle = nextSubtitle.trim();
       }
 
@@ -77,7 +77,7 @@ app.post("/api/state", (req, res) => {
     state.videoSrc = nextVideoSrc.trim();
   }
 
-  if (typeof nextSubtitle === "string" && nextSubtitle.trim().length > 0) {
+  if (typeof nextSubtitle === "string") {
     state.subtitle = nextSubtitle.trim();
   }
 
