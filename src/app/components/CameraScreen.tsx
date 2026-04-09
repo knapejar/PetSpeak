@@ -2,20 +2,11 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Share2, Volume2, Circle, Save } from "lucide-react";
 import { ShareModal } from "./ShareModal";
-
-const translations = [
-  "I demand belly rubs immediately! 🐾",
-  "That's MY toy, human! 😤",
-  "Is it dinner time yet? I think it's dinner time. 🍖",
-  "I love you... but I also love snacks more 😋",
-  "Why do you leave every day? Stay and pet me! 💕",
-  "I buried something in the yard... you'll never find it 😏",
-  "Can we go for a walk? Like, right now? Please? 🚶",
-  "I'm not begging, I'm just... extremely interested in your food 🤤",
-];
+import { useRealtimeState } from "../realtime";
 
 export function CameraScreen() {
-  const [currentTranslation, setCurrentTranslation] = useState(translations[0]);
+  const { state: liveState, connected } = useRealtimeState();
+  const [recordingStatusMessage, setRecordingStatusMessage] = useState<string | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -25,21 +16,24 @@ export function CameraScreen() {
   const chunksRef = useRef<BlobPart[]>([]);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTranslation(
-        translations[Math.floor(Math.random() * translations.length)]
-      );
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
     return () => {
       if (recorderRef.current && recorderRef.current.state !== "inactive") {
         recorderRef.current.stop();
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!recordingStatusMessage) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      setRecordingStatusMessage(null);
+    }, 2200);
+
+    return () => window.clearTimeout(timeout);
+  }, [recordingStatusMessage]);
 
   const persistRecording = async (recordingBlob: Blob) => {
     const fileName = `petspeak-${new Date().toISOString().replace(/[:.]/g, "-")}.webm`;
@@ -56,7 +50,7 @@ export function CameraScreen() {
           title: "PetSpeak recording",
           text: "PetSpeak video recording",
         });
-        setCurrentTranslation("Recording saved via share sheet 🎉");
+        setRecordingStatusMessage("Recording saved via share sheet 🎉");
         return;
       } catch {
         // fallback to download below
@@ -71,14 +65,14 @@ export function CameraScreen() {
     link.click();
     link.remove();
     URL.revokeObjectURL(downloadUrl);
-    setCurrentTranslation("Recording saved to Downloads 🎉");
+    setRecordingStatusMessage("Recording saved to Downloads 🎉");
   };
 
   const startRecording = () => {
     const previewVideo = videoRef.current;
 
     if (!previewVideo || !window.MediaRecorder) {
-      setCurrentTranslation("Recording is not supported in this browser.");
+      setRecordingStatusMessage("Recording is not supported in this browser.");
       return;
     }
 
@@ -89,7 +83,7 @@ export function CameraScreen() {
       }).mozCaptureStream?.();
 
     if (!captureStream) {
-      setCurrentTranslation("Could not capture the video stream.");
+      setRecordingStatusMessage("Could not capture the video stream.");
       return;
     }
 
@@ -128,7 +122,7 @@ export function CameraScreen() {
     recorder.start(250);
     setIsRecording(true);
     setIsListening(true);
-    setCurrentTranslation("Recording started. Tap Save when done 🎬");
+    setRecordingStatusMessage("Recording started. Tap Save when done 🎬");
   };
 
   const handleRecordSave = () => {
@@ -147,7 +141,7 @@ export function CameraScreen() {
       <div className="absolute inset-0 bg-gradient-to-b from-indigo-900 via-purple-800 to-pink-800">
         <video
           ref={videoRef}
-          src="/dog.mp4"
+          src={liveState.videoSrc || "/dog.mp4"}
           className="w-full h-full object-cover"
           autoPlay
           muted
@@ -164,8 +158,12 @@ export function CameraScreen() {
           animate={{ opacity: 1, x: 0 }}
           className="px-4 py-2 bg-white/20 backdrop-blur-md rounded-full text-white flex items-center gap-2"
         >
-          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-          <span className="text-sm">Live</span>
+          <div
+            className={`w-2 h-2 rounded-full ${
+              connected ? "bg-red-500 animate-pulse" : "bg-amber-400"
+            }`}
+          />
+          <span className="text-sm">{connected ? "Live" : "Reconnecting"}</span>
         </motion.div>
       </div>
 
@@ -173,7 +171,7 @@ export function CameraScreen() {
       <div className="relative z-10 flex items-center justify-center h-[calc(100%-200px)] px-6">
         <AnimatePresence mode="wait">
           <motion.div
-            key={currentTranslation}
+            key={liveState.subtitle}
             initial={{ scale: 0.8, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.8, opacity: 0, y: -20 }}
@@ -183,7 +181,7 @@ export function CameraScreen() {
             {/* Speech Bubble */}
             <div className="bg-white rounded-3xl p-6 shadow-2xl relative">
               <p className="text-xl text-gray-800 text-center leading-relaxed">
-                {currentTranslation}
+                {recordingStatusMessage ?? liveState.subtitle}
               </p>
               {/* Bubble Tail */}
               <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-8 h-8 bg-white rotate-45 rounded-sm" />
@@ -256,7 +254,7 @@ export function CameraScreen() {
       <ShareModal
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
-        translation={currentTranslation}
+        translation={recordingStatusMessage ?? liveState.subtitle}
       />
     </div>
   );

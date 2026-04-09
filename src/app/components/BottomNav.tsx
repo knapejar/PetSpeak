@@ -1,4 +1,4 @@
-import { Camera, User, Settings } from "lucide-react";
+import { Camera, User, Settings, SlidersHorizontal } from "lucide-react";
 import { Link, useLocation } from "react-router";
 import { motion } from "motion/react";
 
@@ -7,6 +7,7 @@ export function BottomNav() {
 
   const navItems = [
     { path: "/", icon: Camera, label: "Camera" },
+    { path: "/controller", icon: SlidersHorizontal, label: "Control" },
     { path: "/profile", icon: User, label: "Profile" },
     { path: "/settings", icon: Settings, label: "Voice" },
   ];
