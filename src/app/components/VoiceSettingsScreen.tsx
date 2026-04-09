@@ -3,6 +3,7 @@ import { motion } from "motion/react";
 import { Volume2, Check, Sparkles } from "lucide-react";
 import { Switch } from "./ui/switch";
 import { Slider } from "./ui/slider";
+import { SOUND_CLIPS } from "../soundClips";
 
 const voicePersonalities = [
   {
@@ -57,10 +58,33 @@ const voicePersonalities = [
 
 export function VoiceSettingsScreen() {
   const [selectedVoice, setSelectedVoice] = useState("funny");
+  const [previewAudioSrc, setPreviewAudioSrc] = useState<string | null>(null);
+  const [previewPlaybackToken, setPreviewPlaybackToken] = useState(0);
   const [pitch, setPitch] = useState([50]);
   const [speed, setSpeed] = useState([50]);
   const [autoTranslate, setAutoTranslate] = useState(true);
   const [soundEffects, setSoundEffects] = useState(true);
+
+  const voicePreviewClipMap: Record<string, string> = {
+    funny: "24",
+    serious: "17",
+    cute: "19",
+    dramatic: "11",
+    wise: "12",
+    energetic: "27",
+  };
+
+  const playPreviewForVoice = (voiceId: string) => {
+    const clipId = voicePreviewClipMap[voiceId] ?? "19";
+    const clip = SOUND_CLIPS.find((item) => item.id === clipId);
+
+    if (!clip) {
+      return;
+    }
+
+    setPreviewAudioSrc(clip.audioSrc);
+    setPreviewPlaybackToken((current) => current + 1);
+  };
 
   return (
     <div className="h-full overflow-y-auto pb-24">
@@ -98,7 +122,10 @@ export function VoiceSettingsScreen() {
                 transition={{ delay: 0.2 + index * 0.05 }}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => setSelectedVoice(voice.id)}
+                onClick={() => {
+                  setSelectedVoice(voice.id);
+                  playPreviewForVoice(voice.id);
+                }}
                 className={`w-full p-4 rounded-2xl border-2 transition-all ${
                   selectedVoice === voice.id
                     ? "border-purple-500 bg-purple-50"
@@ -227,11 +254,18 @@ export function VoiceSettingsScreen() {
           transition={{ delay: 0.7 }}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
+          onClick={() => playPreviewForVoice(selectedVoice)}
           className="w-full py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-2xl shadow-lg flex items-center justify-center gap-2"
         >
           <Volume2 size={20} />
           <span>Preview Voice</span>
         </motion.button>
+
+        <audio
+          key={`${previewAudioSrc ?? "voice-preview"}-${previewPlaybackToken}`}
+          src={previewAudioSrc ?? undefined}
+          autoPlay
+        />
       </div>
     </div>
   );
