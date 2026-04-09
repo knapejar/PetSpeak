@@ -79,9 +79,24 @@ export function ProfileScreen() {
           className="mb-6"
         >
           <div className="bg-white rounded-2xl p-4 shadow-sm mb-4">
-            <h2 className="text-xl text-gray-800">{dogProfile.name}</h2>
-            <p className="text-sm text-purple-600 mt-1">{dogProfile.breed} • {dogProfile.age}</p>
-            <p className="text-sm text-gray-600 mt-2">{dogProfile.bio}</p>
+            <div className="flex items-center gap-4">
+              <video
+                src="/main.mp4"
+                autoPlay
+                loop
+                muted
+                defaultMuted
+                playsInline
+                className="w-20 h-20 rounded-full object-cover border-2 border-purple-200 bg-black"
+              />
+              <div>
+                <h2 className="text-xl text-gray-800">{dogProfile.name}</h2>
+                <p className="text-sm text-purple-600 mt-1">
+                  {dogProfile.breed} • {dogProfile.age}
+                </p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-600 mt-3">{dogProfile.bio}</p>
           </div>
 
           <h1 className="text-2xl text-gray-800 flex items-center gap-2">
