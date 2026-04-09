@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Share2, Volume2, Circle, Save } from "lucide-react";
+import { Share2, Volume2, VolumeX, Circle, Save } from "lucide-react";
 import { ShareModal } from "./ShareModal";
 import { MAIN_VIDEO_SRC, useRealtimeState } from "../realtime";
 import { saveRecordingToGallery } from "../recordings";
@@ -12,9 +12,11 @@ export function CameraScreen() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [isSoundEnabled, setIsSoundEnabled] = useState(true);
   const [playbackAudioSrc, setPlaybackAudioSrc] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
 
@@ -53,8 +55,23 @@ export function CameraScreen() {
       return;
     }
 
+    if (!isSoundEnabled) {
+      return;
+    }
+
     setPlaybackAudioSrc(liveState.audioSrc);
-  }, [liveState.updatedAt, liveState.audioSrc]);
+  }, [liveState.updatedAt, liveState.audioSrc, isSoundEnabled]);
+
+  useEffect(() => {
+    if (isSoundEnabled) {
+      return;
+    }
+
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+  }, [isSoundEnabled]);
 
   const persistRecording = async (recordingBlob: Blob) => {
     try {
@@ -231,9 +248,10 @@ export function CameraScreen() {
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
+            onClick={() => setIsSoundEnabled((current) => !current)}
             className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md text-white flex items-center justify-center"
           >
-            <Volume2 size={24} />
+            {isSoundEnabled ? <Volume2 size={24} /> : <VolumeX size={24} />}
           </motion.button>
         </div>
       </div>
@@ -246,8 +264,10 @@ export function CameraScreen() {
       />
 
       <audio
+        ref={audioRef}
         key={playbackAudioSrc ? `${playbackAudioSrc}-${liveState.updatedAt}` : "client-audio"}
         src={playbackAudioSrc ?? undefined}
+        muted={!isSoundEnabled}
         autoPlay
       />
     </div>
