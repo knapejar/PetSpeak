@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { Volume2, Check, Sparkles } from "lucide-react";
 import { Switch } from "./ui/switch";
@@ -64,6 +64,7 @@ export function VoiceSettingsScreen() {
   const [speed, setSpeed] = useState([50]);
   const [autoTranslate, setAutoTranslate] = useState(true);
   const [soundEffects, setSoundEffects] = useState(true);
+  const previewAudioRef = useRef<HTMLAudioElement | null>(null);
 
   const voicePreviewClipMap: Record<string, string> = {
     funny: "24",
@@ -84,6 +85,37 @@ export function VoiceSettingsScreen() {
 
     setPreviewAudioSrc(clip.audioSrc);
     setPreviewPlaybackToken((current) => current + 1);
+  };
+
+  const previewPlaybackRate = useMemo(() => {
+    const speedFactor = 0.5 + speed[0] / 100;
+    const pitchFactor = 0.75 + pitch[0] / 200;
+    return Math.min(2, Math.max(0.5, speedFactor * pitchFactor));
+  }, [pitch, speed]);
+
+  useEffect(() => {
+    if (!previewAudioRef.current) {
+      return;
+    }
+
+    previewAudioRef.current.playbackRate = previewPlaybackRate;
+
+    const audioElement = previewAudioRef.current as HTMLAudioElement & {
+      preservesPitch?: boolean;
+      webkitPreservesPitch?: boolean;
+    };
+
+    if (typeof audioElement.preservesPitch === "boolean") {
+      audioElement.preservesPitch = false;
+    }
+
+    if (typeof audioElement.webkitPreservesPitch === "boolean") {
+      audioElement.webkitPreservesPitch = false;
+    }
+  }, [previewPlaybackRate, previewPlaybackToken]);
+
+  const replayPreviewAfterSliderRelease = () => {
+    playPreviewForVoice(selectedVoice);
   };
 
   return (
@@ -185,6 +217,7 @@ export function VoiceSettingsScreen() {
             <Slider
               value={pitch}
               onValueChange={setPitch}
+              onValueCommit={replayPreviewAfterSliderRelease}
               max={100}
               step={1}
               className="w-full"
@@ -204,6 +237,7 @@ export function VoiceSettingsScreen() {
             <Slider
               value={speed}
               onValueChange={setSpeed}
+              onValueCommit={replayPreviewAfterSliderRelease}
               max={100}
               step={1}
               className="w-full"
@@ -262,6 +296,7 @@ export function VoiceSettingsScreen() {
         </motion.button>
 
         <audio
+          ref={previewAudioRef}
           key={`${previewAudioSrc ?? "voice-preview"}-${previewPlaybackToken}`}
           src={previewAudioSrc ?? undefined}
           autoPlay
