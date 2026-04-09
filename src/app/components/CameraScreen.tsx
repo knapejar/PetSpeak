@@ -7,6 +7,7 @@ import { useRealtimeState } from "../realtime";
 export function CameraScreen() {
   const { state: liveState } = useRealtimeState();
   const [recordingStatusMessage, setRecordingStatusMessage] = useState<string | null>(null);
+  const [isLiveSubtitleVisible, setIsLiveSubtitleVisible] = useState(true);
   const [showShareModal, setShowShareModal] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -34,6 +35,16 @@ export function CameraScreen() {
 
     return () => window.clearTimeout(timeout);
   }, [recordingStatusMessage]);
+
+  useEffect(() => {
+    setIsLiveSubtitleVisible(true);
+
+    const timeout = window.setTimeout(() => {
+      setIsLiveSubtitleVisible(false);
+    }, 10000);
+
+    return () => window.clearTimeout(timeout);
+  }, [liveState.updatedAt, liveState.subtitle]);
 
   const persistRecording = async (recordingBlob: Blob) => {
     const fileName = `petspeak-${new Date().toISOString().replace(/[:.]/g, "-")}.webm`;
@@ -135,6 +146,9 @@ export function CameraScreen() {
     startRecording();
   };
 
+  const subtitleText =
+    recordingStatusMessage ?? (isLiveSubtitleVisible ? liveState.subtitle : null);
+
   return (
     <div className="relative h-full w-full overflow-hidden">
       {/* Camera View Background */}
@@ -151,23 +165,26 @@ export function CameraScreen() {
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/40" />
       </div>
 
-      {/* Top Subtitle */}
-      <div className="relative z-10 px-4 pt-5">
+      {/* Top Subtitle Speech Bubble */}
+      <div className="relative z-10 px-4 mt-2">
         <AnimatePresence mode="wait">
-          <motion.div
-            key={recordingStatusMessage ?? liveState.subtitle}
-            initial={{ y: -10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -10, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="w-full"
-          >
-            <div className="bg-black/45 backdrop-blur-md rounded-2xl px-4 py-3 border border-white/20">
-              <p className="text-base text-white text-center leading-snug">
-                {recordingStatusMessage ?? liveState.subtitle}
-              </p>
-            </div>
-          </motion.div>
+          {subtitleText && (
+            <motion.div
+              key={subtitleText}
+              initial={{ y: -10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -10, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="w-full flex justify-center"
+            >
+              <div className="relative max-w-sm bg-white rounded-3xl p-4 shadow-2xl">
+                <p className="text-base text-gray-800 text-center leading-snug">
+                  {subtitleText}
+                </p>
+                <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-6 h-6 bg-white rotate-45 rounded-sm" />
+              </div>
+            </motion.div>
+          )}
         </AnimatePresence>
       </div>
 
