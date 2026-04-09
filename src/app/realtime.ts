@@ -21,11 +21,19 @@ const listeners = new Set<() => void>();
 
 let currentState: PetSpeakState = DEFAULT_STATE;
 let isConnected = false;
+let currentSnapshot = {
+  state: currentState,
+  connected: isConnected,
+};
 let socket: WebSocket | null = null;
 let reconnectTimer: number | null = null;
 let initialized = false;
 
 const notify = () => {
+  currentSnapshot = {
+    state: currentState,
+    connected: isConnected,
+  };
   listeners.forEach((listener) => listener());
 };
 
@@ -110,10 +118,7 @@ const subscribe = (listener: () => void) => {
   };
 };
 
-const getSnapshot = () => ({
-  state: currentState,
-  connected: isConnected,
-});
+const getSnapshot = () => currentSnapshot;
 
 export const useRealtimeState = () => {
   useEffect(() => {
