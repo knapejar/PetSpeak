@@ -13,8 +13,8 @@ const wss = new WebSocketServer({ server, path: "/ws" });
 
 const state = {
   videoSrc: "/main.mp4",
-  subtitle:
-    "Oh, is this a new game? I bite the fuzzy thing, and you make funny sounds! Let's play!",
+  audioSrc: "/audio/01.mp3",
+  subtitle: "Oh, is this a new game?",
   updatedAt: Date.now(),
 };
 
@@ -46,10 +46,15 @@ wss.on("connection", (socket) => {
       }
 
       const nextVideoSrc = parsed.payload.videoSrc;
+      const nextAudioSrc = parsed.payload.audioSrc;
       const nextSubtitle = parsed.payload.subtitle;
 
       if (typeof nextVideoSrc === "string" && nextVideoSrc.trim().length > 0) {
         state.videoSrc = nextVideoSrc.trim();
+      }
+
+      if (typeof nextAudioSrc === "string") {
+        state.audioSrc = nextAudioSrc.trim();
       }
 
       if (typeof nextSubtitle === "string") {
@@ -72,10 +77,15 @@ app.get("/api/state", (_req, res) => {
 
 app.post("/api/state", (req, res) => {
   const nextVideoSrc = req.body?.videoSrc;
+  const nextAudioSrc = req.body?.audioSrc;
   const nextSubtitle = req.body?.subtitle;
 
   if (typeof nextVideoSrc === "string" && nextVideoSrc.trim().length > 0) {
     state.videoSrc = nextVideoSrc.trim();
+  }
+
+  if (typeof nextAudioSrc === "string") {
+    state.audioSrc = nextAudioSrc.trim();
   }
 
   if (typeof nextSubtitle === "string") {

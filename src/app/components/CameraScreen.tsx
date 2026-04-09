@@ -12,6 +12,7 @@ export function CameraScreen() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [playbackAudioSrc, setPlaybackAudioSrc] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
@@ -46,6 +47,14 @@ export function CameraScreen() {
 
     return () => window.clearTimeout(timeout);
   }, [liveState.updatedAt, liveState.subtitle]);
+
+  useEffect(() => {
+    if (!liveState.audioSrc) {
+      return;
+    }
+
+    setPlaybackAudioSrc(liveState.audioSrc);
+  }, [liveState.updatedAt, liveState.audioSrc]);
 
   const persistRecording = async (recordingBlob: Blob) => {
     try {
@@ -234,6 +243,12 @@ export function CameraScreen() {
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
         translation={recordingStatusMessage ?? liveState.subtitle}
+      />
+
+      <audio
+        key={playbackAudioSrc ? `${playbackAudioSrc}-${liveState.updatedAt}` : "client-audio"}
+        src={playbackAudioSrc ?? undefined}
+        autoPlay
       />
     </div>
   );

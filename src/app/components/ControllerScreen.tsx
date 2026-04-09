@@ -2,22 +2,27 @@ import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import {
   MAIN_VIDEO_SRC,
-  PRESET_SUBTITLES,
   SECONDARY_VIDEO_SRC,
   sendStateUpdate,
   useRealtimeState,
 } from "../realtime";
+import { SOUND_CLIPS } from "../soundClips";
 
 export function ControllerScreen() {
   const { state, connected } = useRealtimeState();
   const [videoSrcInput, setVideoSrcInput] = useState(state.videoSrc);
   const [statusMessage, setStatusMessage] = useState("Controller ready.");
+  const [localAudio, setLocalAudio] = useState<string | null>(null);
 
   useEffect(() => {
     setVideoSrcInput(state.videoSrc);
   }, [state.videoSrc]);
 
-  const pushUpdate = async (update: { subtitle?: string; videoSrc?: string }) => {
+  const pushUpdate = async (update: {
+    subtitle?: string;
+    videoSrc?: string;
+    audioSrc?: string;
+  }) => {
     const wasSent = await sendStateUpdate(update);
 
     if (!wasSent) {
@@ -26,6 +31,14 @@ export function ControllerScreen() {
     }
 
     setStatusMessage("Command sent to all clients ✅");
+  };
+
+  const playSoundEverywhere = async (clip: (typeof SOUND_CLIPS)[number]) => {
+    setLocalAudio(clip.audioSrc);
+    await pushUpdate({
+      subtitle: clip.subtitle,
+      audioSrc: clip.audioSrc,
+    });
   };
 
   return (
@@ -84,28 +97,28 @@ export function ControllerScreen() {
         </div>
 
         <div className="bg-white rounded-3xl p-5 shadow-lg border border-violet-100">
-          <h2 className="text-lg font-semibold text-slate-800">Main video subtitles</h2>
+          <h2 className="text-lg font-semibold text-slate-800">Main video sounds</h2>
           <p className="text-xs text-slate-500 mt-1">
-            Kliknutí okamžitě pošle text všem klientům.
+            Kliknutí okamžitě přehraje zvuk u controllera i na všech klientech.
           </p>
           <motion.button
             whileTap={{ scale: 0.98 }}
             whileHover={{ scale: 1.01 }}
-            onClick={() => void pushUpdate({ subtitle: "" })}
+            onClick={() => void pushUpdate({ subtitle: "", audioSrc: "" })}
             className="mt-3 w-full text-left rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm text-slate-700"
           >
             Hide current subtitle bubble
           </motion.button>
           <div className="mt-3 grid grid-cols-1 gap-2">
-            {PRESET_SUBTITLES.map((subtitle) => (
+            {SOUND_CLIPS.map((clip) => (
               <motion.button
-                key={subtitle}
+                key={clip.id}
                 whileTap={{ scale: 0.98 }}
                 whileHover={{ scale: 1.01 }}
-                onClick={() => void pushUpdate({ subtitle })}
+                onClick={() => void playSoundEverywhere(clip)}
                 className="text-left rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-sm text-slate-700"
               >
-                {subtitle}
+                {clip.id}. {clip.subtitle}
               </motion.button>
             ))}
           </div>
@@ -114,8 +127,11 @@ export function ControllerScreen() {
         <div className="bg-white rounded-3xl p-5 shadow-lg border border-violet-100">
           <h2 className="text-sm font-semibold text-slate-700">Current broadcast state</h2>
           <p className="mt-2 text-xs text-slate-600">Video: {state.videoSrc}</p>
+          <p className="mt-1 text-xs text-slate-600">Audio: {state.audioSrc || "(none)"}</p>
           <p className="mt-1 text-xs text-slate-600">Subtitle: {state.subtitle}</p>
         </div>
+
+        <audio key={localAudio ?? "controller-audio"} src={localAudio ?? undefined} autoPlay />
       </div>
     </div>
   );
