@@ -5,7 +5,7 @@ import { ShareModal } from "./ShareModal";
 import { useRealtimeState } from "../realtime";
 
 export function CameraScreen() {
-  const { state: liveState, connected } = useRealtimeState();
+  const { state: liveState } = useRealtimeState();
   const [recordingStatusMessage, setRecordingStatusMessage] = useState<string | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -151,65 +151,48 @@ export function CameraScreen() {
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/40" />
       </div>
 
-      {/* Top Bar */}
-      <div className="relative z-10 p-6 flex justify-between items-center">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="px-4 py-2 bg-white/20 backdrop-blur-md rounded-full text-white flex items-center gap-2"
-        >
-          <div
-            className={`w-2 h-2 rounded-full ${
-              connected ? "bg-red-500 animate-pulse" : "bg-amber-400"
-            }`}
-          />
-          <span className="text-sm">{connected ? "Live" : "Reconnecting"}</span>
-        </motion.div>
-      </div>
-
-      {/* Speech Bubble - Centered */}
-      <div className="relative z-10 flex items-center justify-center h-[calc(100%-200px)] px-6">
+      {/* Top Subtitle */}
+      <div className="relative z-10 px-4 pt-5">
         <AnimatePresence mode="wait">
           <motion.div
-            key={liveState.subtitle}
-            initial={{ scale: 0.8, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.8, opacity: 0, y: -20 }}
-            transition={{ type: "spring", damping: 20, stiffness: 300 }}
-            className="relative max-w-sm"
+            key={recordingStatusMessage ?? liveState.subtitle}
+            initial={{ y: -10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -10, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="w-full"
           >
-            {/* Speech Bubble */}
-            <div className="bg-white rounded-3xl p-6 shadow-2xl relative">
-              <p className="text-xl text-gray-800 text-center leading-relaxed">
+            <div className="bg-black/45 backdrop-blur-md rounded-2xl px-4 py-3 border border-white/20">
+              <p className="text-base text-white text-center leading-snug">
                 {recordingStatusMessage ?? liveState.subtitle}
               </p>
-              {/* Bubble Tail */}
-              <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-8 h-8 bg-white rotate-45 rounded-sm" />
             </div>
-
-            {/* Animated Dots */}
-            {isListening && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex gap-2 justify-center mt-8"
-              >
-                {[0, 1, 2].map((i) => (
-                  <motion.div
-                    key={i}
-                    animate={{ y: [0, -10, 0] }}
-                    transition={{
-                      duration: 0.6,
-                      repeat: Infinity,
-                      delay: i * 0.15,
-                    }}
-                    className="w-3 h-3 bg-purple-500 rounded-full"
-                  />
-                ))}
-              </motion.div>
-            )}
           </motion.div>
         </AnimatePresence>
+      </div>
+
+      {/* Center helper animation while recording */}
+      <div className="relative z-10 flex items-center justify-center h-[calc(100%-210px)] px-6">
+        {isListening && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex gap-2 justify-center"
+          >
+            {[0, 1, 2].map((i) => (
+              <motion.div
+                key={i}
+                animate={{ y: [0, -10, 0] }}
+                transition={{
+                  duration: 0.6,
+                  repeat: Infinity,
+                  delay: i * 0.15,
+                }}
+                className="w-3 h-3 bg-purple-500 rounded-full"
+              />
+            ))}
+          </motion.div>
+        )}
       </div>
 
       {/* Bottom Action Buttons */}

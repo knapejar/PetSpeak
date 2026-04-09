@@ -11,8 +11,8 @@ export function ControllerScreen() {
     setVideoSrcInput(state.videoSrc);
   }, [state.videoSrc]);
 
-  const pushUpdate = (update: { subtitle?: string; videoSrc?: string }) => {
-    const wasSent = sendStateUpdate(update);
+  const pushUpdate = async (update: { subtitle?: string; videoSrc?: string }) => {
+    const wasSent = await sendStateUpdate(update);
 
     if (!wasSent) {
       setStatusMessage("Server is disconnected. Reconnecting...");
@@ -50,7 +50,7 @@ export function ControllerScreen() {
           <motion.button
             whileTap={{ scale: 0.98 }}
             whileHover={{ scale: 1.02 }}
-            onClick={() => pushUpdate({ videoSrc: videoSrcInput.trim() || "/dog.mp4" })}
+            onClick={() => void pushUpdate({ videoSrc: videoSrcInput.trim() || "/dog.mp4" })}
             className="mt-3 w-full rounded-xl px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-violet-500 to-fuchsia-500"
           >
             Broadcast video change
@@ -68,7 +68,7 @@ export function ControllerScreen() {
                 key={subtitle}
                 whileTap={{ scale: 0.98 }}
                 whileHover={{ scale: 1.01 }}
-                onClick={() => pushUpdate({ subtitle })}
+                onClick={() => void pushUpdate({ subtitle })}
                 className="text-left rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-sm text-slate-700"
               >
                 {subtitle}

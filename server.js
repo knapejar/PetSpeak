@@ -69,6 +69,23 @@ app.get("/api/state", (_req, res) => {
   res.json(state);
 });
 
+app.post("/api/state", (req, res) => {
+  const nextVideoSrc = req.body?.videoSrc;
+  const nextSubtitle = req.body?.subtitle;
+
+  if (typeof nextVideoSrc === "string" && nextVideoSrc.trim().length > 0) {
+    state.videoSrc = nextVideoSrc.trim();
+  }
+
+  if (typeof nextSubtitle === "string" && nextSubtitle.trim().length > 0) {
+    state.subtitle = nextSubtitle.trim();
+  }
+
+  state.updatedAt = Date.now();
+  broadcastState();
+  res.json(state);
+});
+
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true });
 });
