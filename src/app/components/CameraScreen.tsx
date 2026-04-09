@@ -1,0 +1,263 @@
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { Share2, Volume2, Circle, Save } from "lucide-react";
+import { ShareModal } from "./ShareModal";
+
+const translations = [
+  "I demand belly rubs immediately! 🐾",
+  "That's MY toy, human! 😤",
+  "Is it dinner time yet? I think it's dinner time. 🍖",
+  "I love you... but I also love snacks more 😋",
+  "Why do you leave every day? Stay and pet me! 💕",
+  "I buried something in the yard... you'll never find it 😏",
+  "Can we go for a walk? Like, right now? Please? 🚶",
+  "I'm not begging, I'm just... extremely interested in your food 🤤",
+];
+
+export function CameraScreen() {
+  const [currentTranslation, setCurrentTranslation] = useState(translations[0]);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<BlobPart[]>([]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTranslation(
+        translations[Math.floor(Math.random() * translations.length)]
+      );
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (recorderRef.current && recorderRef.current.state !== "inactive") {
+        recorderRef.current.stop();
+      }
+    };
+  }, []);
+
+  const persistRecording = async (recordingBlob: Blob) => {
+    const fileName = `petspeak-${new Date().toISOString().replace(/[:.]/g, "-")}.webm`;
+    const file = new File([recordingBlob], fileName, { type: recordingBlob.type });
+
+    if (
+      navigator.share &&
+      navigator.canShare &&
+      navigator.canShare({ files: [file] })
+    ) {
+      try {
+        await navigator.share({
+          files: [file],
+          title: "PetSpeak recording",
+          text: "PetSpeak video recording",
+        });
+        setCurrentTranslation("Recording saved via share sheet 🎉");
+        return;
+      } catch {
+        // fallback to download below
+      }
+    }
+
+    const downloadUrl = URL.createObjectURL(recordingBlob);
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(downloadUrl);
+    setCurrentTranslation("Recording saved to Downloads 🎉");
+  };
+
+  const startRecording = () => {
+    const previewVideo = videoRef.current;
+
+    if (!previewVideo || !window.MediaRecorder) {
+      setCurrentTranslation("Recording is not supported in this browser.");
+      return;
+    }
+
+    const captureStream =
+      previewVideo.captureStream?.() ??
+      (previewVideo as HTMLVideoElement & {
+        mozCaptureStream?: () => MediaStream;
+      }).mozCaptureStream?.();
+
+    if (!captureStream) {
+      setCurrentTranslation("Could not capture the video stream.");
+      return;
+    }
+
+    const supportedMimeType = [
+      "video/webm;codecs=vp9,opus",
+      "video/webm;codecs=vp8,opus",
+      "video/webm",
+    ].find((mimeType) => MediaRecorder.isTypeSupported(mimeType));
+
+    const recorder = supportedMimeType
+      ? new MediaRecorder(captureStream, { mimeType: supportedMimeType })
+      : new MediaRecorder(captureStream);
+
+    chunksRef.current = [];
+    recorderRef.current = recorder;
+
+    recorder.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        chunksRef.current.push(event.data);
+      }
+    };
+
+    recorder.onstop = async () => {
+      const recordingBlob = new Blob(chunksRef.current, {
+        type: recorder.mimeType || "video/webm",
+      });
+
+      if (recordingBlob.size > 0) {
+        await persistRecording(recordingBlob);
+      }
+
+      setIsListening(false);
+      chunksRef.current = [];
+    };
+
+    recorder.start(250);
+    setIsRecording(true);
+    setIsListening(true);
+    setCurrentTranslation("Recording started. Tap Save when done 🎬");
+  };
+
+  const handleRecordSave = () => {
+    if (isRecording) {
+      setIsRecording(false);
+      recorderRef.current?.stop();
+      return;
+    }
+
+    startRecording();
+  };
+
+  return (
+    <div className="relative h-full w-full overflow-hidden">
+      {/* Camera View Background */}
+      <div className="absolute inset-0 bg-gradient-to-b from-indigo-900 via-purple-800 to-pink-800">
+        <video
+          ref={videoRef}
+          src="/dog.mp4"
+          className="w-full h-full object-cover"
+          autoPlay
+          muted
+          playsInline
+          loop
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/40" />
+      </div>
+
+      {/* Top Bar */}
+      <div className="relative z-10 p-6 flex justify-between items-center">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="px-4 py-2 bg-white/20 backdrop-blur-md rounded-full text-white flex items-center gap-2"
+        >
+          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+          <span className="text-sm">Live</span>
+        </motion.div>
+      </div>
+
+      {/* Speech Bubble - Centered */}
+      <div className="relative z-10 flex items-center justify-center h-[calc(100%-200px)] px-6">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentTranslation}
+            initial={{ scale: 0.8, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.8, opacity: 0, y: -20 }}
+            transition={{ type: "spring", damping: 20, stiffness: 300 }}
+            className="relative max-w-sm"
+          >
+            {/* Speech Bubble */}
+            <div className="bg-white rounded-3xl p-6 shadow-2xl relative">
+              <p className="text-xl text-gray-800 text-center leading-relaxed">
+                {currentTranslation}
+              </p>
+              {/* Bubble Tail */}
+              <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-8 h-8 bg-white rotate-45 rounded-sm" />
+            </div>
+
+            {/* Animated Dots */}
+            {isListening && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex gap-2 justify-center mt-8"
+              >
+                {[0, 1, 2].map((i) => (
+                  <motion.div
+                    key={i}
+                    animate={{ y: [0, -10, 0] }}
+                    transition={{
+                      duration: 0.6,
+                      repeat: Infinity,
+                      delay: i * 0.15,
+                    }}
+                    className="w-3 h-3 bg-purple-500 rounded-full"
+                  />
+                ))}
+              </motion.div>
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* Bottom Action Buttons */}
+      <div className="relative z-10 pb-8 px-6">
+        <div className="flex justify-center items-center gap-6">
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setShowShareModal(true)}
+            className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md text-white flex items-center justify-center"
+          >
+            <Share2 size={24} />
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={handleRecordSave}
+            className={`w-24 h-24 rounded-full text-white flex flex-col items-center justify-center shadow-xl ${
+              isRecording
+                ? "bg-gradient-to-br from-red-500 to-rose-500"
+                : "bg-gradient-to-br from-purple-500 to-pink-500"
+            }`}
+          >
+            {isRecording ? <Save size={30} /> : <Circle size={30} />}
+            <span className="text-xs font-medium mt-1">
+              {isRecording ? "Save" : "Record"}
+            </span>
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md text-white flex items-center justify-center"
+          >
+            <Volume2 size={24} />
+          </motion.button>
+        </div>
+      </div>
+
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        translation={currentTranslation}
+      />
+    </div>
+  );
+}
