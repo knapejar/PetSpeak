@@ -13,6 +13,13 @@ type RecordingView = {
   url: string;
 };
 
+const dogProfile = {
+  name: "Milo",
+  breed: "Maltese",
+  age: "4 months",
+  bio: "Cute little Maltese puppy dog with endless zoomies, playful barking, and very strong opinions about rugs.",
+};
+
 export function ProfileScreen() {
   const [recordings, setRecordings] = useState<StoredRecording[]>([]);
   const [loading, setLoading] = useState(true);
@@ -71,6 +78,12 @@ export function ProfileScreen() {
           animate={{ y: 0, opacity: 1 }}
           className="mb-6"
         >
+          <div className="bg-white rounded-2xl p-4 shadow-sm mb-4">
+            <h2 className="text-xl text-gray-800">{dogProfile.name}</h2>
+            <p className="text-sm text-purple-600 mt-1">{dogProfile.breed} • {dogProfile.age}</p>
+            <p className="text-sm text-gray-600 mt-2">{dogProfile.bio}</p>
+          </div>
+
           <h1 className="text-2xl text-gray-800 flex items-center gap-2">
             <Film size={22} className="text-purple-500" />
             Recordings Gallery
