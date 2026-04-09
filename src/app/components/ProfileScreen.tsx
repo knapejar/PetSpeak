@@ -103,6 +103,8 @@ export function ProfileScreen() {
                 <video
                   src={recording.url}
                   controls
+                  muted
+                  defaultMuted
                   playsInline
                   className="w-full rounded-xl bg-black"
                 />

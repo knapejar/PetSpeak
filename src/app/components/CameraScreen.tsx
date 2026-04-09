@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Share2, Volume2, Circle, Save } from "lucide-react";
 import { ShareModal } from "./ShareModal";
-import { useRealtimeState } from "../realtime";
+import { MAIN_VIDEO_SRC, useRealtimeState } from "../realtime";
 import { saveRecordingToGallery } from "../recordings";
 
 export function CameraScreen() {
@@ -75,6 +75,8 @@ export function CameraScreen() {
       return;
     }
 
+    const videoOnlyStream = new MediaStream(captureStream.getVideoTracks());
+
     const supportedMimeType = [
       "video/webm;codecs=vp9,opus",
       "video/webm;codecs=vp8,opus",
@@ -82,8 +84,8 @@ export function CameraScreen() {
     ].find((mimeType) => MediaRecorder.isTypeSupported(mimeType));
 
     const recorder = supportedMimeType
-      ? new MediaRecorder(captureStream, { mimeType: supportedMimeType })
-      : new MediaRecorder(captureStream);
+      ? new MediaRecorder(videoOnlyStream, { mimeType: supportedMimeType })
+      : new MediaRecorder(videoOnlyStream);
 
     chunksRef.current = [];
     recorderRef.current = recorder;
@@ -131,10 +133,11 @@ export function CameraScreen() {
       <div className="absolute inset-0 bg-gradient-to-b from-indigo-900 via-purple-800 to-pink-800">
         <video
           ref={videoRef}
-          src={liveState.videoSrc || "/dog.mp4"}
+          src={liveState.videoSrc || MAIN_VIDEO_SRC}
           className="w-full h-full object-cover"
           autoPlay
           muted
+          defaultMuted
           playsInline
           loop
         />

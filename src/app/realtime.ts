@@ -11,9 +11,13 @@ type ServerMessage = {
   payload: PetSpeakState;
 };
 
+export const MAIN_VIDEO_SRC = "/main.mp4";
+export const SECONDARY_VIDEO_SRC = "/dog.mp4";
+
 const DEFAULT_STATE: PetSpeakState = {
-  videoSrc: "/dog.mp4",
-  subtitle: "I demand belly rubs immediately! 🐾",
+  videoSrc: MAIN_VIDEO_SRC,
+  subtitle:
+    "Oh, is this a new game? I bite the fuzzy thing, and you make funny sounds! Let's play!",
   updatedAt: Date.now(),
 };
 
@@ -206,14 +210,16 @@ export const useRealtimeState = () => {
 };
 
 export const PRESET_SUBTITLES = [
-  "I want snacks right now! 🍖",
-  "Can we go outside, please? 🐕",
-  "You are late with my dinner. ⏰",
-  "Throw the ball again! 🎾",
-  "This couch is mine now. 👑",
-  "I heard something at the door! 🚪",
-  "I need a nap after all this barking. 😴",
-  "Pet me more, human. ✋",
-  "I am a very good dog today. ⭐",
-  "Where is my favorite toy? 🧸",
+  "Oh, is this a new game? I bite the fuzzy thing, and you make funny sounds! Let's play!",
+  "Wow, you're really getting into this! Watch me do a spin and bark to level up!",
+  "Catch me if you can! The rug is mine!",
+  "You call it bad, I call it abstract art. This rug desperately needs some custom fraying.",
+  "You just don't understand my creative process! Stop interrupting my masterpiece!",
+  "True artists never listen to their critics. I will defend my work!",
+  "Why are you yelling at me? This evil blue monster grabbed my teeth!",
+  "I'm not bad! I'm protecting the house! You should be thanking me, honestly.",
+  "I'm just a tiny puppy! How can you be so cruel to me? I demand a treat for emotional damage.",
+  "I hear you, but I choose to ignore you. The rug tastes like rebellion.",
+  "Whatever. You can't stop me. I run this house now.",
+  "Try to catch me! See? You're powerless against my cuteness!",
 ];

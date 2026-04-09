@@ -12,8 +12,9 @@ const server = http.createServer(app);
 const wss = new WebSocketServer({ server, path: "/ws" });
 
 const state = {
-  videoSrc: "/dog.mp4",
-  subtitle: "I demand belly rubs immediately! 🐾",
+  videoSrc: "/main.mp4",
+  subtitle:
+    "Oh, is this a new game? I bite the fuzzy thing, and you make funny sounds! Let's play!",
   updatedAt: Date.now(),
 };
 

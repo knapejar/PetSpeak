@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { PRESET_SUBTITLES, sendStateUpdate, useRealtimeState } from "../realtime";
+import {
+  MAIN_VIDEO_SRC,
+  PRESET_SUBTITLES,
+  SECONDARY_VIDEO_SRC,
+  sendStateUpdate,
+  useRealtimeState,
+} from "../realtime";
 
 export function ControllerScreen() {
   const { state, connected } = useRealtimeState();
@@ -41,16 +47,36 @@ export function ControllerScreen() {
           <p className="text-xs text-slate-500 mt-1">
             Nastav URL nebo cestu videa, které se má přehrávat na všech klientech.
           </p>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <motion.button
+              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: 1.01 }}
+              onClick={() => void pushUpdate({ videoSrc: MAIN_VIDEO_SRC })}
+              className="rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-sm text-slate-700"
+            >
+              Main video
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: 1.01 }}
+              onClick={() => void pushUpdate({ videoSrc: SECONDARY_VIDEO_SRC })}
+              className="rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-sm text-slate-700"
+            >
+              Secondary video
+            </motion.button>
+          </div>
           <input
             value={videoSrcInput}
             onChange={(event) => setVideoSrcInput(event.target.value)}
             className="mt-3 w-full rounded-xl border border-violet-200 px-3 py-2 text-sm"
-            placeholder="/dog.mp4"
+            placeholder={MAIN_VIDEO_SRC}
           />
           <motion.button
             whileTap={{ scale: 0.98 }}
             whileHover={{ scale: 1.02 }}
-            onClick={() => void pushUpdate({ videoSrc: videoSrcInput.trim() || "/dog.mp4" })}
+            onClick={() =>
+              void pushUpdate({ videoSrc: videoSrcInput.trim() || MAIN_VIDEO_SRC })
+            }
             className="mt-3 w-full rounded-xl px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-violet-500 to-fuchsia-500"
           >
             Broadcast video change
@@ -58,7 +84,7 @@ export function ControllerScreen() {
         </div>
 
         <div className="bg-white rounded-3xl p-5 shadow-lg border border-violet-100">
-          <h2 className="text-lg font-semibold text-slate-800">Dog subtitles (10 presets)</h2>
+          <h2 className="text-lg font-semibold text-slate-800">Main video subtitles</h2>
           <p className="text-xs text-slate-500 mt-1">
             Kliknutí okamžitě pošle text všem klientům.
           </p>
