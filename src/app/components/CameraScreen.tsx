@@ -154,7 +154,7 @@ export function CameraScreen() {
       </div>
 
       {/* Top Subtitle Speech Bubble */}
-      <div className="relative z-10 px-4 mt-2">
+      <div className="relative z-10 px-4 mt-12">
         <AnimatePresence mode="wait">
           {subtitleText && (
             <motion.div
@@ -166,7 +166,7 @@ export function CameraScreen() {
               className="w-full flex justify-center"
             >
               <div className="relative max-w-sm bg-white rounded-3xl p-4 shadow-2xl">
-                <p className="text-base text-gray-800 text-center leading-snug">
+                <p className="text-2xl text-gray-800 text-center leading-snug">
                   {subtitleText}
                 </p>
                 <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-6 h-6 bg-white rotate-45 rounded-sm" />
